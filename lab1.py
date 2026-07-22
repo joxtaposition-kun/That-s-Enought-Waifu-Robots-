@@ -1,7 +1,8 @@
 #Imports
-import pygame, sys
-from pygame.locals import *
+import pygame
+import sys
 import random, time
+from pygame.locals import K_LEFT, K_RIGHT, QUIT
 
 #Initializing Pygame
 pygame.init()
@@ -47,7 +48,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.move_ip(0, SPEED)
         if self.rect.top > 600:
             self.rect.top = 0
-            self.rect.center = (random.randint(35, SCREEN_WIDTH - 40), 0)
+            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
             
 
 class Target(pygame.sprite.Sprite):
@@ -58,12 +59,18 @@ class Target(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(
             center=(random.randint(40, SCREEN_WIDTH - 40), 0)
         )
+        self.y = float(self.rect.y)
+        self.hit = False
         
     def move(self):
-        self.rect.move_ip(0, SPEED)
-        if self.rect.top > 600:
-            self.rect.top = 0
-            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+        self.y += SPEED
+        self.rect.y = int(self.y)
+        
+        if self.rect.top > SCREEN_HEIGHT:
+            self.rect = self.image.get_rect(
+                center=(random.randint(40, SCREEN_WIDTH - 40), 0)
+            )
+            self.y = float(self.rect.y)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self):
@@ -101,7 +108,7 @@ class Background:
     def render(self):
         DISPLAY.blit(self.bgimage, (self.bgX1, self.bgY1))
         DISPLAY.blit(self.bgimage, (self.bgX2, self.bgY2))
-        
+    
 
 # Setting up Sprites
 B1 = Bullet()
@@ -132,10 +139,19 @@ while True:
             
     background.render()
     
+    scores = font_small.render(str(SCORE), True, BLACK)
+    DISPLAY.blit(scores, (10, 10))
+    
     for entity in all_sprites:
         DISPLAY.blit(entity.image, entity.rect)
         entity.move()
         
+    if pygame.sprite.spritecollideany(B1, targets):
+        if not T1.hit:
+            SCORE += 1
+            T1.hit = True
+        else:
+            T1.hit = False
     if pygame.sprite.spritecollideany(B1, walls):
         time.sleep(0.2)
         
@@ -154,3 +170,5 @@ while True:
     
     pygame.display.update()
     FramePerSec.tick(FPS)
+    
+        
