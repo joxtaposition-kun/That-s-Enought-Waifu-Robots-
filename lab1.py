@@ -34,6 +34,23 @@ DISPLAY = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAY.fill(WHITE)
 pygame.display.set_caption("ZZZNIPER")
 
+class Target(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("Enemy.png")
+        self.surf = pygame.Surface((42,70))
+        self.rect = self.surf.get_rect(
+            center=(random.randint(40, SCREEN_WIDTH - 40), 0)
+        )
+        
+    def move(self):
+        global SCORE
+        self.rect.move_ip(0, SPEED)
+        if self.rect.top > 600:
+            SCORE += 1
+            self.rect.top = 0
+            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -74,12 +91,17 @@ class Background:
 
 # Setting up Sprites
 B1 = Bullet()
+T1 = Target()
 
 background = Background()
 
 #Creating Sprites Groups
+enemies = pygame.sprite.Group()
+enemies.add(T1)
+
 all_sprites = pygame.sprite.Group()
 all_sprites.add(B1)
+all_sprites.add(T1)
 
 # Game Loop
 while True:
@@ -88,7 +110,9 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+            
     background.render()
+    
     for entity in all_sprites:
         DISPLAY.blit(entity.image, entity.rect)
         entity.move()
