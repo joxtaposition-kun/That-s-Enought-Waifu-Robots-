@@ -105,6 +105,18 @@ class Background:
         self.bgY2 = self.rectBGimg.height
         self.bgX2 = 0
         
+        self.movingUpSpeed = 5
+        
+    def update(self):
+        self.bgY1 -= self.movingUpSpeed
+        self.bgY2 -= self.movingUpSpeed
+        
+        if self.bgY1 <= -self.rectBGimg.height:
+            self.bgY1 = self.rectBGimg.height
+            
+        if self.bgY2 <= -self.rectBGimg.height:
+            self.bgY2 = self.rectBGimg.height
+        
     def render(self):
         DISPLAY.blit(self.bgimage, (self.bgX1, self.bgY1))
         DISPLAY.blit(self.bgimage, (self.bgX2, self.bgY2))
@@ -137,6 +149,7 @@ while True:
             pygame.quit()
             sys.exit()
             
+    background.update()
     background.render()
     
     scores = font_small.render(str(SCORE), True, BLACK)
