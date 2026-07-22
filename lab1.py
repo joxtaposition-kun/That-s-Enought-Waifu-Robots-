@@ -26,7 +26,7 @@ WHITE = (255, 255, 255)
 #FONTS
 font = pygame.font.SysFont("Verdana", 60)
 font_small = pygame.font.SysFont("Verdana", 20)
-game_over = font.render("You're found.", True, BLACK)
+game_over = font.render("FOUND!", True, BLACK)
 winner = font.render("You're winner.", True, BLACK)
 
 #WHITE SCREEN
@@ -47,7 +47,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.move_ip(0, SPEED)
         if self.rect.top > 600:
             self.rect.top = 0
-            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+            self.rect.center = (random.randint(35, SCREEN_WIDTH - 40), 0)
             
 
 class Target(pygame.sprite.Sprite):
@@ -136,5 +136,21 @@ while True:
         DISPLAY.blit(entity.image, entity.rect)
         entity.move()
         
+    if pygame.sprite.spritecollideany(B1, walls):
+        time.sleep(0.2)
+        
+        DISPLAY.fill(RED)
+        DISPLAY.blit(game_over, (30, 250))
+        
+        pygame.display.update()
+        
+        for entity in all_sprites:
+            entity.kill()
+            
+        time.sleep(1.5)
+        pygame.quit()
+        sys.exit()
+    
+    
     pygame.display.update()
     FramePerSec.tick(FPS)
