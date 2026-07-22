@@ -55,8 +55,27 @@ class Bullet(pygame.sprite.Sprite):
             if pressed_keys[K_RIGHT]:
                 # TODO: Remove magic numbers
                 self.rect.move_ip(5, 0)
+
+class Background:
+    def __init__(self):
+        self.bgimage = pygame.image.load("Background.png")
+        self.rectBGimg = self.bgimage.get_rect()
+        
+        self.bgY1 = 0
+        self.bgX1 = 0
+        
+        self.bgY2 = self.rectBGimg.height
+        self.bgX2 = 0
+        
+    def render(self):
+        DISPLAY.blit(self.bgimage, (self.bgX1, self.bgY1))
+        DISPLAY.blit(self.bgimage, (self.bgX2, self.bgY2))
+        
+
 # Setting up Sprites
 B1 = Bullet()
+
+background = Background()
 
 #Creating Sprites Groups
 all_sprites = pygame.sprite.Group()
@@ -69,6 +88,7 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+    background.render()
     for entity in all_sprites:
         DISPLAY.blit(entity.image, entity.rect)
         entity.move()
