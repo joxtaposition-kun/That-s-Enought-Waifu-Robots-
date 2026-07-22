@@ -141,10 +141,17 @@ all_sprites.add(B1)
 all_sprites.add(T1)
 all_sprites.add(W1)
 
+#Adding a new User event
+INC_SPEED = pygame.USEREVENT + 1
+pygame.time.set_timer(INC_SPEED, 1000)
+
 # Game Loop
 while True:
     #Cycling through events
     for event in pygame.event.get():
+    
+        if event.type == INC_SPEED:
+            SPEED += 0.5
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
@@ -169,8 +176,7 @@ while True:
         time.sleep(0.2)
         
         DISPLAY.fill(RED)
-        DISPLAY.blit(game_over, (30, 250))
-        
+        DISPLAY.blit(game_over, (30, 250))  
         pygame.display.update()
         
         for entity in all_sprites:
