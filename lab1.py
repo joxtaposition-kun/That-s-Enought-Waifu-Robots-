@@ -37,16 +37,20 @@ game_over = font.render("CATCHED!", True, BLACK)
 #WHITE SCREEN
 DISPLAY = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAY.fill(WHITE)
-pygame.display.set_caption("ZZZT!")
+pygame.display.set_caption("ZZZNIPER!")
 
 #classes
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("StartScreen.png")
+        self.title = font.render("ZZZNIPER!", True, BLACK)
         
     def render(self):
         DISPLAY.blit(self.image, (0, 0)) # Top Right
+        
+        title_rect = self.title.get_rect(center = (SCREEN_WIDTH // 2, 60))
+        DISPLAY.blit(self.title, title_rect) 
         
 class Wall(pygame.sprite.Sprite):
     def __init__(self):
