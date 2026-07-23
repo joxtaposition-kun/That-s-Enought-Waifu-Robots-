@@ -27,13 +27,13 @@ WHITE = (255, 255, 255)
 #FONTS
 font = pygame.font.SysFont("Verdana", 60)
 font_small = pygame.font.SysFont("Verdana", 20)
-game_over = font.render("FOUND!", True, BLACK)
+game_over = font.render("CATCHED!", True, BLACK)
 winner = font.render("You're winner.", True, BLACK)
 
 #WHITE SCREEN
 DISPLAY = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAY.fill(WHITE)
-pygame.display.set_caption("ZZZNIPER")
+pygame.display.set_caption("ZZZT!")
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self):
