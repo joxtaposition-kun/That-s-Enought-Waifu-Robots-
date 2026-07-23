@@ -7,6 +7,10 @@ from pygame.locals import K_LEFT, K_RIGHT, QUIT
 #Initializing Pygame
 pygame.init()
 
+START = 0
+PLAYING = 1
+GAME_OVER = 2
+
 #SETTINGS
 FPS = 60
 FramePerSec = pygame.time.Clock()
@@ -28,13 +32,22 @@ WHITE = (255, 255, 255)
 font = pygame.font.SysFont("Verdana", 60)
 font_small = pygame.font.SysFont("Verdana", 20)
 game_over = font.render("CATCHED!", True, BLACK)
-winner = font.render("You're winner.", True, BLACK)
+
 
 #WHITE SCREEN
 DISPLAY = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAY.fill(WHITE)
 pygame.display.set_caption("ZZZT!")
 
+#classes
+class StartScreen(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("StartScreen.png")
+        
+    def render(self):
+        DISPLAY.blit(self.image, (0, 0)) # Top Right
+        
 class Wall(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -46,7 +59,7 @@ class Wall(pygame.sprite.Sprite):
         
     def move(self):
         self.rect.move_ip(0, SPEED)
-        if self.rect.top > 600:
+        if self.rect.top > SCREEN_HEIGHT:
             self.rect.top = 0
             self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
             
@@ -127,6 +140,7 @@ B1 = Bullet()
 T1 = Target()
 W1 = Wall()
 
+start_screen = StartScreen()
 background = Background()
 
 #Creating Sprites Groups
@@ -145,48 +159,59 @@ all_sprites.add(W1)
 INC_SPEED = pygame.USEREVENT + 1
 pygame.time.set_timer(INC_SPEED, 1000)
 
+game_state = START
+start_time = pygame.time.get_ticks()
+
 # Game Loop
 while True:
     #Cycling through events
-    for event in pygame.event.get():
-    
-        if event.type == INC_SPEED:
-            SPEED += 0.5
+    for event in pygame.event.get(): 
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == INC_SPEED and game_state == PLAYING:
+            SPEED += 0.5
+    #Start
+    if game_state == START:
+        current_time = pygame.time.get_ticks()
+        start_screen.render()
+        if current_time - start_time >= 2000:
+            game_state = PLAYING
+
+    elif game_state == PLAYING:        
+        background.update()
+        background.render()
+        
+        scores = font_small.render(str(SCORE), True, BLACK)
+        DISPLAY.blit(scores, (10, 10))
+        
+        for entity in all_sprites:
+            DISPLAY.blit(entity.image, entity.rect)
+            entity.move()
             
-    background.update()
-    background.render()
-    
-    scores = font_small.render(str(SCORE), True, BLACK)
-    DISPLAY.blit(scores, (10, 10))
-    
-    for entity in all_sprites:
-        DISPLAY.blit(entity.image, entity.rect)
-        entity.move()
+        if pygame.sprite.spritecollideany(B1, walls):
+            game_state = GAME_OVER
         
-    if pygame.sprite.spritecollideany(B1, targets):
-        if not T1.hit:
-            SCORE += 1
-            T1.hit = True
-        else:
-            T1.hit = False
-    if pygame.sprite.spritecollideany(B1, walls):
-        time.sleep(0.2)
-        
+    elif game_state == GAME_OVER:
         DISPLAY.fill(RED)
         DISPLAY.blit(game_over, (30, 250))  
         pygame.display.update()
         
         for entity in all_sprites:
             entity.kill()
-            
-        time.sleep(1.5)
+        
+        pygame.time.delay(1500)
         pygame.quit()
         sys.exit()
-    
-    
+            
+        
+    if pygame.sprite.spritecollideany(B1, targets):
+        if not T1.hit:
+            SCORE += 1
+            T1.hit = True
+    else:
+        T1.hit = False
+
     pygame.display.update()
     FramePerSec.tick(FPS)
     
