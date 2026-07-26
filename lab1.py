@@ -7,6 +7,7 @@ from pygame.locals import K_LEFT, K_RIGHT, QUIT
 #Initializing Pygame
 pygame.init()
 
+NAME = "That's Enough Waifu Robots!"
 START = 0
 PLAYING = 1
 GAME_OVER = 2
@@ -31,20 +32,19 @@ WHITE = (255, 255, 255)
 #FONTS
 font = pygame.font.SysFont("Verdana", 60)
 font_small = pygame.font.SysFont("Verdana", 20)
-game_over = font.render("CATCHED!", True, BLACK)
-
+game_over = font.render("SPOTTED!", True, BLACK)
 
 #WHITE SCREEN
 DISPLAY = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAY.fill(WHITE)
-pygame.display.set_caption("ZZZNIPER!")
+pygame.display.set_caption(NAME)
 
 #classes
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("StartScreen.png")
-        self.title = font.render("ZZZNIPER!", True, BLACK)
+        self.title = font.render(NAME, True, BLACK)
         
     def render(self):
         DISPLAY.blit(self.image, (0, 0)) # Top Right
@@ -56,10 +56,8 @@ class Wall(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("Wall.png")
-        self.surf = pygame.Surface((70, 42))
-        self.rect = self.surf.get_rect(
-            center = (random.randint(40, SCREEN_WIDTH - 40), 0)
-        )
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
         
     def move(self):
         self.rect.move_ip(0, SPEED)
@@ -72,10 +70,8 @@ class Target(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("Enemy.png")
-        self.surf = pygame.Surface((42,70))
-        self.rect = self.surf.get_rect(
-            center=(random.randint(40, SCREEN_WIDTH - 40), 0)
-        )
+        self.rect = self.image.get_rect()
+        self.rect.center = center=(random.randint(40, SCREEN_WIDTH - 40), 0)
         self.y = float(self.rect.y)
         self.hit = False
         
@@ -89,7 +85,7 @@ class Target(pygame.sprite.Sprite):
             )
             self.y = float(self.rect.y)
 
-class Bullet(pygame.sprite.Sprite):
+class Hero(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("Player.png")
@@ -140,7 +136,7 @@ class Background:
     
 
 # Setting up Sprites
-B1 = Bullet()
+B1 = Hero()
 T1 = Target()
 W1 = Wall()
 
@@ -210,11 +206,7 @@ while True:
             
         
     if pygame.sprite.spritecollideany(B1, targets):
-        if not T1.hit:
-            SCORE += 1
-            T1.hit = True
-    else:
-        T1.hit = False
+        SCORE += 1
 
     pygame.display.update()
     FramePerSec.tick(FPS)
