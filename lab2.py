@@ -13,6 +13,7 @@ class GameState(Enum):
     GAME_OVER = auto()
 
 # Modules
+# Switch states. 
 class StateModule:
     def __init__(self, game):
         self.game = game
@@ -28,33 +29,32 @@ class StateModule:
                     self.game.game_state = GameState.GAME_OVER
             case GameState.GAME_OVER:
                 pass
+                
 
 #classes
+# Prepares and render the Start Screen.
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
         self.image = self.game.bg_image
         self.title = self.game.font.render(self.game.NAME, True, self.game.BLACK)
+        # TODO: Change magic numbers to variables.
+        self.title_rect = self.title.get_rect(center = (self.game.SCREEN_WIDTH // 3, 60))
         
     def render(self):
         self.game.DISPLAY.blit(self.image, (0, 0)) # Top Right
-        
-        title_rect = self.title.get_rect(center = (self.game.SCREEN_WIDTH // 2, 60))
-        self.game.DISPLAY.blit(self.title, title_rect) 
-        
+        self.game.DISPLAY.blit(self.title, self.title_rect) 
 
-
+# Prepares and render the background.
 class Background:
     def __init__(self, game):
         self.game = game
-
-        self.bgimage = pygame.image.load("Background.png").convert()
+        self.bgimage = self.game.bg_image # XXX: Change to a white texture.
         self.bgimage = pygame.transform.scale(
             self.bgimage,
             (self.game.SCREEN_WIDTH, self.game.SCREEN_HEIGHT)
         )
-        self.rectBGimg = self.bgimage.get_rect()
         
         self.bgY1 = 0
         self.bgX1 = 0
@@ -62,7 +62,7 @@ class Background:
         self.bgX2 = 0
         self.bgY2 = -self.game.SCREEN_HEIGHT
         
-        
+    # Movement of background.
     def update(self):
         self.bgY1 -= self.game.SPEED
         self.bgY2 -=  self.game.SPEED
@@ -72,16 +72,18 @@ class Background:
             
         if self.bgY2 <= -self.game.SCREEN_HEIGHT:
             self.bgY2 = self.bgY1 + self.game.SCREEN_HEIGHT
-        
+
+    
     def render(self):
         self.game.DISPLAY.blit(self.bgimage, (self.bgX1, self.bgY1))
         self.game.DISPLAY.blit(self.bgimage, (self.bgX2, self.bgY2))
 
+# The object that will score you a point on collision.
 class Target(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load("Enemy.png").convert_alpha()
+        self.image = self.game.target_image
         self.rect = self.image.get_rect(
             center=(
                 random.randint(40, self.game.SCREEN_WIDTH - 40),
@@ -182,6 +184,8 @@ class GameData:
     game_state: GameState = GameState.START
     state_mod: StateModule = field(init=False)
     bg_image: pygame.Surface = field(init=False) 
+    target_image: pygame.Surface = field(init=False)
+
 
     # Assets
     H1: Hero = field(init=False)
@@ -201,6 +205,7 @@ class GameData:
         pygame.display.set_caption(self.NAME)
 
         self.bg_image = pygame.image.load("StartScreen.png").convert()
+        self.target_image = pygame.image.load("Enemy.png").convert_alpha()
         self.font = pygame.font.SysFont("Verdana", 60)
         self.font_small = pygame.font.SysFont("Verdana", 20)
         self.GAME_OVER = self.font.render("SPOTTED!", True, self.BLACK)
