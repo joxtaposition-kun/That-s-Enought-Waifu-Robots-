@@ -29,14 +29,12 @@ class StateModule:
             case GameState.GAME_OVER:
                 pass
 
-
-
 #classes
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load("StartScreen.png").convert()
+        self.image = self.game.bg_image
         self.title = self.game.font.render(self.game.NAME, True, self.game.BLACK)
         
     def render(self):
@@ -183,10 +181,13 @@ class GameData:
     DISPLAY: pygame.Surface = field(init=False)
     game_state: GameState = GameState.START
     state_mod: StateModule = field(init=False)
+    bg_image: pygame.Surface = field(init=False) 
 
+    # Assets
     H1: Hero = field(init=False)
     T1: Target = field(init=False)
     W1: Wall = field(init=False)
+
 
 
     def __post_init__(self):
@@ -194,9 +195,12 @@ class GameData:
         self.clock = pygame.time.Clock()
 
         # Display
-        self.DISPLAY = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        self.DISPLAY = pygame.display.set_mode(
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
+        )
         pygame.display.set_caption(self.NAME)
 
+        self.bg_image = pygame.image.load("StartScreen.png").convert()
         self.font = pygame.font.SysFont("Verdana", 60)
         self.font_small = pygame.font.SysFont("Verdana", 20)
         self.GAME_OVER = self.font.render("SPOTTED!", True, self.BLACK)
@@ -221,6 +225,7 @@ class GameData:
 
         self.targets.add(self.T1)
         self.walls.add(self.W1)
+
 
         
 class GameEngine:
