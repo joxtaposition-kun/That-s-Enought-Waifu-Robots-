@@ -6,46 +6,51 @@ from pygame.locals import K_LEFT, K_RIGHT, QUIT
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
-
+# Data Structures
 class GameState(Enum):
     START = auto()
     PLAYING = auto()
     GAME_OVER = auto()
-# UI
 
-
+# Modules
 class StateModule:
     def __init__(self, game):
         self.game = game
         self.start_time = pygame.time.get_ticks()
         self.background = self.game.background
+
+
+    def activate_start_state(self):
+        current_time = pygame.time.get_ticks()
+        self.game.start_screen.render()
+        if current_time - self.start_time >= 3000:
+            self.game.game_state = GameState.PLAYING
  
     # -- Changes by State Go Here --
     def update(self):
 
         if self.game.game_state == GameState.START:
-            current_time = pygame.time.get_ticks()
-            self.game.start_screen.render()
-            if current_time - self.start_time >= 2000:
-                self.game.game_state = GameState.PLAYING
+            self.activate_start_state()
 
         elif self.game.game_state == GameState.PLAYING:        
             self.background.update()
             self.background.render()
-            
+
+            scores_label = self.game.font_small.render('Score:', True, self.game.BLACK)
             scores = self.game.font_small.render(str(self.game.SCORE), True, self.game.BLACK)
-            self.game.DISPLAY.blit(scores, (10, 10))
+            self.game.DISPLAY.blit(scores, (70, 10))
+            self.game.DISPLAY.blit(scores_label, (0, 10))
             
             for entity in self.game.sprites:
-                self.game.DISPLAY.blit(entity.image, entity.rect)
                 entity.move()
+                self.game.DISPLAY.blit(entity.image, entity.rect)
                 
             if pygame.sprite.spritecollideany(self.game.H1, self.game.walls):
-                self.game_state = self.game.GAME_OVER
+                self.game.game_state = GameState.GAME_OVER
             
-        elif self.game_state == self.GAME_OVER:
-            self.DISPLAY.fill(self.RED)
-            self.DISPLAY.blit(self.GAME_OVER, (30, 250))  
+        elif self.game.game_state == GameState.GAME_OVER:
+            self.game.DISPLAY.fill(self.game.RED)
+            self.game.DISPLAY.blit(self.game.GAME_OVER, (30, 250))  
             pygame.display.update()
             
             for entity in self.game.sprites:
@@ -62,7 +67,7 @@ class StartScreen(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load("StartScreen.png")
+        self.image = pygame.image.load("StartScreen.png").convert()
         self.title = self.game.font.render(self.game.NAME, True, self.game.BLACK)
         
     def render(self):
@@ -77,26 +82,29 @@ class Background:
     def __init__(self, game):
         self.game = game
 
-        self.bgimage = pygame.image.load("Background.png")
+        self.bgimage = pygame.image.load("Background.png").convert()
+        self.bgimage = pygame.transform.scale(
+            self.bgimage,
+            (self.game.SCREEN_WIDTH, self.game.SCREEN_HEIGHT)
+        )
         self.rectBGimg = self.bgimage.get_rect()
         
         self.bgY1 = 0
         self.bgX1 = 0
         
-        self.bgY2 = self.rectBGimg.height
         self.bgX2 = 0
+        self.bgY2 = -self.game.SCREEN_HEIGHT
         
-        self.movingUpSpeed = self.game.SPEED
         
     def update(self):
-        self.bgY1 -= self.movingUpSpeed
-        self.bgY2 -= self.movingUpSpeed
+        self.bgY1 -= self.game.SPEED
+        self.bgY2 -=  self.game.SPEED
         
-        if self.bgY1 <= -self.rectBGimg.height:
-            self.bgY1 = self.rectBGimg.height
+        if self.bgY1 <= -self.game.SCREEN_HEIGHT:
+            self.bgY1 = self.bgY2 + self.game.SCREEN_HEIGHT
             
-        if self.bgY2 <= -self.rectBGimg.height:
-            self.bgY2 = self.rectBGimg.height
+        if self.bgY2 <= -self.game.SCREEN_HEIGHT:
+            self.bgY2 = self.bgY1 + self.game.SCREEN_HEIGHT
         
     def render(self):
         self.game.DISPLAY.blit(self.bgimage, (self.bgX1, self.bgY1))
@@ -106,8 +114,12 @@ class Target(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load("Enemy.png")
-        self.rect = self.image.get_rect()
+        self.image = pygame.image.load("Enemy.png").convert_alpha()
+        self.rect = self.image.get_rect(
+            center=(
+                random.randint(40, self.game.SCREEN_WIDTH - 40),
+        0
+        ))
         self.rect.center = center=(random.randint(40, self.game.SCREEN_WIDTH - 40), 0)
         self.y = float(self.rect.y)
         self.hit = False
@@ -125,12 +137,17 @@ class Target(pygame.sprite.Sprite):
 class Hero(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
-        self.image = pygame.image.load("Player.png")
+        self.image = pygame.image.load("Player.png").convert_alpha()
         self.game = game
         # TODO: Remove magic numbers
         # (width, height)
-        self.rect = self.image.get_rect()
         
+        self.rect = self.image.get_rect(
+            midbottom=(
+                self.game.SCREEN_WIDTH // 2,
+                self.game.SCREEN_HEIGHT - 20
+            )
+        )
     def move(self):
         keys = pygame.key.get_pressed()
         
@@ -151,7 +168,7 @@ class Wall(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.image = pygame.image.load("Wall.png")
+        self.image = pygame.image.load("Wall.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (random.randint(40, self.game.SCREEN_WIDTH - 40), 0)
         
@@ -173,7 +190,7 @@ class GameData:
 
     SPEED: int = 5
     SCORE: int = 0
-    INC_SPEED: int = 5
+    INC_SPEED: int = field(default=pygame.USEREVENT + 1, init=False)
     FPS: int = 60
 
     # Colors
@@ -204,22 +221,24 @@ class GameData:
 
     def __post_init__(self):
         # Font
+        self.clock = pygame.time.Clock()
+
+        # Display
+        self.DISPLAY = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        pygame.display.set_caption(self.NAME)
+
         self.font = pygame.font.SysFont("Verdana", 60)
         self.font_small = pygame.font.SysFont("Verdana", 20)
         self.GAME_OVER = self.font.render("SPOTTED!", True, self.BLACK)
+
         self.background = Background(self)
         self.state_mod = StateModule(self)
         self.start_screen = StartScreen(self)
-        self.clock = pygame.time.Clock()
 
         self.sprites = pygame.sprite.Group()
         self.walls = pygame.sprite.Group()
         self.targets = pygame.sprite.Group()
 
-        # Display
-        self.DISPLAY = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        self.DISPLAY.fill(self.WHITE)
-        pygame.display.set_caption(self.NAME)
 
         # Sprites
         self.H1 = Hero(self)
@@ -244,10 +263,11 @@ class GameEngine:
             NAME="That's Enough Waifu Robots!",
             FPS=60,
         )  
+        self.state_mod = self.game.state_mod
+        pygame.time.set_timer(self.game.INC_SPEED, 5000)
         
     def run(self):
         self.update_events()
-        self.game.state_mod.update()
         self.update_collisions()
 
         pygame.display.update()
@@ -256,12 +276,21 @@ class GameEngine:
 
     # -- Changes by Collisions Go Here --
     def update_collisions(self):
-        if pygame.sprite.spritecollideany(self.game.H1, self.game.targets):
-            self.game.SCORE += 1
+        target = pygame.sprite.spritecollideany(
+            self.game.H1,
+            self.game.targets
+        )
+
+        if target:
+                self.game.SCORE += 1
+                target.rect.center = (
+                    random.randint(40, self.game.SCREEN_WIDTH - 40), 0
+                )
 
     # -- Pygame Events Go Here --
     def update_events(self):
         self.game.SPEED
+        self.game.state_mod.update()
          #Cycling through events
         for event in pygame.event.get(): 
             if event.type == self.game.INC_SPEED:
@@ -270,7 +299,7 @@ class GameEngine:
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == self.game.INC_SPEED and self.game_state == self.game.PLAYING:
+            if event.type == self.game.INC_SPEED and self.game.game_state == GameState.PLAYING:
                 self.game.SPEED += 0.5
 
 
