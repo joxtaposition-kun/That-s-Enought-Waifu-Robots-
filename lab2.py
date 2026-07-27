@@ -17,48 +17,17 @@ class StateModule:
     def __init__(self, game):
         self.game = game
         self.start_time = pygame.time.get_ticks()
-        self.background = self.game.background
 
-
-    def activate_start_state(self):
-        current_time = pygame.time.get_ticks()
-        self.game.start_screen.render()
-        if current_time - self.start_time >= 3000:
-            self.game.game_state = GameState.PLAYING
- 
-    # -- Changes by State Go Here --
     def update(self):
-
-        if self.game.game_state == GameState.START:
-            self.activate_start_state()
-
-        elif self.game.game_state == GameState.PLAYING:        
-            self.background.update()
-            self.background.render()
-
-            scores_label = self.game.font_small.render('Score:', True, self.game.BLACK)
-            scores = self.game.font_small.render(str(self.game.SCORE), True, self.game.BLACK)
-            self.game.DISPLAY.blit(scores, (70, 10))
-            self.game.DISPLAY.blit(scores_label, (0, 10))
-            
-            for entity in self.game.sprites:
-                entity.move()
-                self.game.DISPLAY.blit(entity.image, entity.rect)
-                
-            if pygame.sprite.spritecollideany(self.game.H1, self.game.walls):
-                self.game.game_state = GameState.GAME_OVER
-            
-        elif self.game.game_state == GameState.GAME_OVER:
-            self.game.DISPLAY.fill(self.game.RED)
-            self.game.DISPLAY.blit(self.game.GAME_OVER, (30, 250))  
-            pygame.display.update()
-            
-            for entity in self.game.sprites:
-                entity.kill()
-                
-            pygame.time.delay(1500)
-            pygame.quit()
-            sys.exit()
+        match self.game.game_state:
+            case GameState.START:
+                if pygame.time.get_ticks() - self.start_time >= 3000:
+                    self.game.game_state = GameState.PLAYING
+            case GameState.PLAYING:
+                if pygame.sprite.spritecollideany(self.game.H1, self.game.walls):
+                    self.game.game_state = GameState.GAME_OVER
+            case GameState.GAME_OVER:
+                pass
 
 
 
@@ -192,6 +161,7 @@ class GameData:
     SCORE: int = 0
     INC_SPEED: int = field(default=pygame.USEREVENT + 1, init=False)
     FPS: int = 60
+    
 
     # Colors
     BLUE: tuple = (0, 0, 255)
@@ -263,16 +233,57 @@ class GameEngine:
             NAME="That's Enough Waifu Robots!",
             FPS=60,
         )  
+
         self.state_mod = self.game.state_mod
         pygame.time.set_timer(self.game.INC_SPEED, 5000)
-        
+        self.background = self.game.background
+
+        self.state_handlers = {
+            GameState.START: self.run_start,
+            GameState.PLAYING: self.run_playing,
+            GameState.GAME_OVER: self.run_game_over,
+        }
+
+    def run_start(self):
+        self.game.start_screen.render()
+
+    def run_playing(self):
+        self.update_background()
+        self.update_collisions()
+        self.update_entities()
+        self.draw_score()
+
+    def run_game_over(self):
+        self.draw_game_over()
+
     def run(self):
         self.update_events()
-        self.update_collisions()
-
+        self.state_mod.update()
+        self.state_handlers[self.game.game_state]()
         pygame.display.update()
         self.game.clock.tick(self.game.FPS)
 
+
+    def update_entities(self):
+        for entity in self.game.sprites:
+            entity.move()
+            self.game.DISPLAY.blit(entity.image, entity.rect)
+
+    def draw_game_over(self):
+        self.game.DISPLAY.fill(self.game.RED)
+        self.game.DISPLAY.blit(self.game.GAME_OVER, (30, 250))
+
+    def draw_score(self):
+        score_label = self.game.font_small.render("Score:", True, self.game.BLACK)
+        score = self.game.font_small.render(str(self.game.SCORE), True, self.game.BLACK)
+
+        self.game.DISPLAY.blit(score_label, (0,10))
+        self.game.DISPLAY.blit(score, (70, 10))
+
+    # -- Display background
+    def update_background(self):
+        self.background.update()
+        self.background.render()
 
     # -- Changes by Collisions Go Here --
     def update_collisions(self):
